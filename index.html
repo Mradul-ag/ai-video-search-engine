@@ -180,7 +180,7 @@
                     if(feedTitle) feedTitle.innerText = "📊 Timeline Breakdown";
                     if(itemCount) itemCount.innerText = `${analyzeData.saved_segments_count || 0} segments indexed`;
                     
-                    let lines = analyzeData?.analysis?.split('\n').filter(...)
+                    let lines = (analyzeData?.analysis|| "").split('\n').filter(line => line.trim() !== "");
                     renderTimelineCards(textLines, "bg-slate-900/60");
 
                 } catch (err) {
