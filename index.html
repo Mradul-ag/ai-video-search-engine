@@ -180,10 +180,17 @@
                     if(feedTitle) feedTitle.innerText = "📊 Timeline Breakdown";
                     if(itemCount) itemCount.innerText = `${analyzeData.saved_segments_count || 0} segments indexed`;
                     
-                    let lines = (analyzeData?.analysis|| "").split('\n').filter(line => line.trim() !== "");
-                    renderTimelineCards(textLines, "bg-slate-900/60");
-
-                } catch (err) {
+        try {
+        let textLines = [];
+        if (analyzeData && analyzeData.analysis) {
+            textLines = analyzeData.analysis.split('\n');
+        }
+        renderTimelineCards(textLines);
+    } catch (error) {
+        console.error("Error displaying timeline:", error);
+    }       
+}
+            catch (err) {
                     console.error("❌ Process failure:", err);
                     if(outputList) outputList.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm">⚠️ Error: ${err.message}</div>`;
                 } finally {
