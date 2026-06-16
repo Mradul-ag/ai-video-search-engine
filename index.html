@@ -90,170 +90,41 @@
     </div>
 
     <script>
-        const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
-        let currentFilePath = "";
+    const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
 
-        console.log("🚀 Frontend script loaded and tracking elements...");
-
-        const dropZone = document.getElementById('drop-zone');
+    async function handleUpload() {
         const videoInput = document.getElementById('video-input');
-        const uploadBtn = document.getElementById('upload-btn');
-        const uploadLoader = document.getElementById('upload-loader');
-        const loaderStatus = document.getElementById('loader-status');
-        const outputList = document.getElementById('output-list');
-        const fileInfoBadge = document.getElementById('file-info-badge');
-        const activeFilePath = document.getElementById('active-file-path');
-        const feedTitle = document.getElementById('feed-title');
-        const itemCount = document.getElementById('item-count');
-        const searchQuery = document.getElementById('search-query');
-        const searchBtn = document.getElementById('search-btn');
+        if (!videoInput.files.length) return alert("Pick a video!");
 
-        // Drag and drop event handlers
-        if(dropZone && videoInput) {
-            dropZone.addEventListener('click', () => videoInput.click());
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-500/5'); });
-            dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-blue-500', 'bg-blue-500/5'); });
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('border-blue-500', 'bg-blue-500/5');
-                if (e.dataTransfer.files.length) videoInput.files = e.dataTransfer.files;
-                updateDropZoneLabel();
-            });
-            videoInput.addEventListener('change', updateDropZoneLabel);
-        }
+        const formData = new FormData();
+        formData.append("file", videoInput.files[0]);
 
-        function updateDropZoneLabel() {
-            if (videoInput && videoInput.files.length) {
-                console.log("📁 Video file selected:", videoInput.files[0].name);
-                const textPara = dropZone.querySelector('p');
-                const subText = dropZone.querySelector('.text-xs');
-                if(textPara) textPara.innerText = videoInput.files[0].name;
-                if(subText) subText.innerText = "Selected successfully";
-            }
-        }
+        // 1. UPLOAD
+        const upRes = await fetch(`${BACKEND_URL}/upload-video`, {
+            method: 'POST',
+            body: formData
+        });
+        const upData = await upRes.json();
 
-        // Action Step 1: Upload and Analyze Pipeline Execution
-        if(uploadBtn) {
-            uploadBtn.addEventListener('click', async () => {
-                console.log("⚡ Button clicked! Checking file status...");
-                
-                if (!videoInput || !videoInput.files.length) {
-                    console.log("❌ Click aborted: No file attached.");
-                    return alert("Please pick a video clip first!");
-                }
-                
-                console.log("🔄 Starting upload process sequence...");
-                uploadBtn.disabled = true;
-                if(uploadLoader) uploadLoader.classList.remove('hidden');
-                if(outputList) outputList.innerHTML = '';
-                
-                try {
-                    if(loaderStatus) loaderStatus.innerText = "Uploading media file to server storage...";
-                    const formData = new FormData();
-                    formData.append("file", videoInput.files[0]);
+        // 2. ANALYZE
+        const anaForm = new FormData();
+        anaForm.append("file_path", upData.file_path);
+        
+        const anaRes = await fetch(`${BACKEND_URL}/analyze-video`, {
+            method: 'POST',
+            body: anaForm
+        });
+        const anaData = await anaRes.json();
 
-                    console.log("📡 Sending POST request to backend upload endpoint...");
-                    const uploadResponse = await fetch(`${BACKEND_URL}/upload-video`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const uploadData = await uploadResponse.json();
-                    console.log("🎯 Upload Response Data:", uploadData);
-                    
-                    if (uploadData.error) throw new Error(uploadData.error);
-                    
-                    currentFilePath = uploadData.file_path;
-                    if(activeFilePath) activeFilePath.innerText = currentFilePath;
-                    if(fileInfoBadge) fileInfoBadge.classList.remove('hidden');
+        // 3. RENDER RESULT
+        document.getElementById('item-count').innerText = `${anaData.saved_segments_count} segments indexed`;
+        document.getElementById('output-list').innerHTML = `
+            <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl">
+                <p class="text-sm text-blue-200">${anaData.analysis}</p>
+            </div>`;
+    }
 
-                    if(loaderStatus) loaderStatus.innerText = "Gemini AI is processing visuals... (takes ~15s)";
-                    console.log("📡 Requesting analysis from Gemini model for path:", currentFilePath);
-                    
-                    const analyzeResponse = await fetch(`${BACKEND_URL}/analyze-video?file_path=${encodeURIComponent(currentFilePath)}`, {
-                        method: 'POST'
-                    });
-                    const analyzeData = await analyzeResponse.json();
-                    console.log("🎯 Analysis Response Data:", analyzeData);
-                    
-                    if (analyzeData.error) throw new Error(analyzeData.error);
-
-                    if(feedTitle) feedTitle.innerText = "📊 Timeline Breakdown";
-                    if(itemCount) itemCount.innerText = `${analyzeData.saved_segments_count || 0} segments indexed`;
-                    
-        try {
-        let textLines = [];
-        if (analyzeData && analyzeData.analysis) {
-            textLines = analyzeData.analysis.split('\n');
-        }
-        renderTimelineCards(textLines);
-    } catch (error) {
-        console.error("Error displaying timeline:", error);
-    }       
-}
-            catch (err) {
-                    console.error("❌ Process failure:", err);
-                    if(outputList) outputList.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm">⚠️ Error: ${err.message}</div>`;
-                } finally {
-                    uploadBtn.disabled = false;
-                    if(uploadLoader) uploadLoader.classList.add('hidden');
-                }
-            });
-        }
-
-        // Action Step 2: Semantic querying against memory structures
-        if(searchBtn) {
-            searchBtn.addEventListener('click', async () => {
-                const queryText = searchQuery ? searchQuery.value.trim() : "";
-                if (!queryText) return alert("Please type an evaluation query expression first.");
-                
-                console.log("🔍 Searching database for:", queryText);
-                searchBtn.disabled = true;
-                try {
-                    const response = await fetch(`${BACKEND_URL}/search-video?query=${encodeURIComponent(queryText)}`);
-                    const data = await response.json();
-                    console.log("🎯 Search Results Received:", data);
-                    
-                    if (data.error) throw new Error(data.error);
-
-                    if(feedTitle) feedTitle.innerText = `🔍 Results for: "${queryText}"`;
-                    if(itemCount) itemCount.innerText = `${data.matches.length} closest matches`;
-
-                    if (!data.matches.length) {
-                        if(outputList) outputList.innerHTML = `<p class="text-center text-slate-500 py-12 text-sm">No conceptual alignment configurations found for that phrase.</p>`;
-                    } else {
-                        renderTimelineCards(data.matches, "bg-blue-950/30 border-blue-500/30 text-blue-200");
-                    }
-                } catch (err) {
-                    console.error("❌ Search failure:", err);
-                    alert(`Search query failed: ${err.message}`);
-                } finally {
-                    searchBtn.disabled = false;
-                }
-            });
-        }
-
-        function renderTimelineCards(lines, customStyle) {
-            if(!outputList) return;
-            outputList.innerHTML = '';
-            lines.forEach(line => {
-                const timestampMatch = line.match(/^\[\d{2}:\d{2}\]/);
-                let timeToken = "[00:00]";
-                let bodyContent = line;
-
-                if (timestampMatch) {
-                    timeToken = timestampMatch[0];
-                    bodyContent = line.replace(timeToken, '').trim();
-                }
-
-                const segmentRow = document.createElement('div');
-                segmentRow.className = `p-4 rounded-xl border border-slate-800 transition-all flex gap-4 items-start ${customStyle}`;
-                segmentRow.innerHTML = `
-                    <span class="bg-blue-600/20 text-blue-400 font-mono text-xs px-2.5 py-1 rounded-md font-semibold border border-blue-500/10 tracking-wider">${timeToken}</span>
-                    <p class="text-sm leading-relaxed text-slate-300 flex-1">${bodyContent}</p>
-                `;
-                outputList.appendChild(segmentRow);
-            });
-        }
-    </script>
+    document.getElementById('upload-btn').addEventListener('click', handleUpload);
+</script>
 </body>
 </html>
