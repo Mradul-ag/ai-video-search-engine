@@ -89,42 +89,52 @@
         </main>
     </div>
 
-    <script>
+   <script>
     const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
+    const dropZone = document.getElementById('drop-zone');
+    const videoInput = document.getElementById('video-input');
+    const uploadBtn = document.getElementById('upload-btn');
 
-    async function handleUpload() {
-        const videoInput = document.getElementById('video-input');
-        if (!videoInput.files.length) return alert("Pick a video!");
+    // 1. Force the file input to open when the drop zone is clicked
+    dropZone.addEventListener('click', () => {
+        videoInput.click();
+    });
 
+    // 2. Listen for file selection
+    videoInput.addEventListener('change', () => {
+        if (videoInput.files.length > 0) {
+            console.log("File selected:", videoInput.files[0].name);
+            const p = dropZone.querySelector('p');
+            p.innerText = videoInput.files[0].name; // Update UI to show filename
+        }
+    });
+
+    // 3. Process Button Logic
+    uploadBtn.addEventListener('click', async () => {
+        if (videoInput.files.length === 0) {
+            return alert("Please select a video file first!");
+        }
+
+        const file = videoInput.files[0];
         const formData = new FormData();
-        formData.append("file", videoInput.files[0]);
+        formData.append("file", file);
 
-        // 1. UPLOAD
-        const upRes = await fetch(`${BACKEND_URL}/upload-video`, {
-            method: 'POST',
-            body: formData
-        });
-        const upData = await upRes.json();
-// Change the analyze fetch block to this:
-const anaForm = new FormData();
-anaForm.append("file_path", upData.file_path); // This key 'file_path' must match the Form parameter in main.py
-
-const anaRes = await fetch(`${BACKEND_URL}/analyze-video`, {
-    method: 'POST',
-    body: anaForm // FastAPI handles the form-data automatically
-});
+        console.log("Uploading...");
         
-        const anaData = await anaRes.json();
-
-        // 3. RENDER RESULT
-        document.getElementById('item-count').innerText = `${anaData.saved_segments_count} segments indexed`;
-        document.getElementById('output-list').innerHTML = `
-            <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl">
-                <p class="text-sm text-blue-200">${anaData.analysis}</p>
-            </div>`;
-    }
-
-    document.getElementById('upload-btn').addEventListener('click', handleUpload);
+        try {
+            const response = await fetch(`${BACKEND_URL}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            console.log("Upload Success:", result);
+            alert("Upload successful! File: " + result.filename);
+        } catch (error) {
+            console.error("Upload Error:", error);
+            alert("Upload failed. Check console.");
+        }
+    });
 </script>
 </body>
 </html>
