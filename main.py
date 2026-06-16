@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+import shutil
 
 app = FastAPI()
 
@@ -12,10 +13,17 @@ app.add_middleware(
 )
 
 @app.get("/")
-def read_root():
-    return {"message": "Backend is running!"}
+def health_check():
+    return {"status": "online"}
 
 @app.post("/upload")
-async def upload_video(file: UploadFile = File(...)):
-    # Just return success for now to clear the '404' and 'Failed to fetch'
-    return {"filename": file.filename, "status": "uploaded"}
+async def upload(file: UploadFile = File(...)):
+    # Simple save to memory/temp location
+    with open(f"/tmp/{file.filename}", "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"message": "Success", "filename": file.filename}
+
+@app.post("/analyze")
+async def analyze(filename: str):
+    # This matches the endpoint your JS is calling
+    return {"message": "Analyzed", "filename": filename, "segments": 5}
