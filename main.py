@@ -1,41 +1,33 @@
 import os
 import google.generativeai as genai
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+import aiofiles
 
-# Initialize the FastAPI application
 app = FastAPI()
 
-# Configure CORS so your frontend can communicate with the backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Safely load the API Key from Environment Variables
-# This works because you added GEMINI_API_KEY to your Render Dashboard
-api_key = os.environ.get("GEMINI_API_KEY")
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-if not api_key:
-    raise ValueError("GEMINI_API_KEY environment variable is not set!")
-
-# Configure the Google Gemini Client
-genai.configure(api_key=api_key)
+@app.post("/upload")
+async def upload_video(file: UploadFile = File(...)):
+    # Save the uploaded file
+    file_path = f"uploads/{file.filename}"
+    os.makedirs("uploads", exist_ok=True)
+    async with aiofiles.open(file_path, "wb") as f:
+        content = await file.read()
+        await f.write(content)
+    
+    # Trigger AI analysis here
+    # (Assuming you have your Gemini logic set up to read this file)
+    return {"message": "Success", "filename": file.filename}
 
 @app.get("/")
-def read_root():
-    return {"message": "Smart Video Analyzer Backend is Live!"}
-
-# --- Add your video processing routes here ---
-# Example route to test connection:
-@app.get("/test-gemini")
-def test_gemini():
-    try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content("Hello, Gemini!")
-        return {"response": response.text}
-    except Exception as e:
-        return {"error": str(e)}
+def health_check():
+    return {"status": "online"}
