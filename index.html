@@ -90,15 +90,42 @@
     </div>
 
   <script>
-    function startAnalysis() {
+    async function startAnalysis() {
         const fileInput = document.getElementById('video-input');
+        const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
+
         if (!fileInput.files.length) {
             alert("No file selected. Please click the area above to select a video first!");
             return;
         }
-        console.log("Starting analysis for:", fileInput.files[0].name);
-        alert("File ready: " + fileInput.files[0].name);
-        // Your fetch logic goes here
+
+        const file = fileInput.files[0];
+        console.log("Starting analysis for:", file.name);
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            // 1. Upload
+            const upRes = await fetch(`${BACKEND_URL}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const upData = await upRes.json();
+            console.log("Upload Success:", upData);
+
+            // 2. Analyze
+            const anaRes = await fetch(`${BACKEND_URL}/analyze?filename=${encodeURIComponent(upData.filename)}`, {
+                method: 'POST'
+            });
+            const anaData = await anaRes.json();
+            console.log("Analysis Result:", anaData);
+
+            alert("Analysis complete! Check the console for the result data.");
+        } catch (err) {
+            console.error("Error:", err);
+            alert("Upload or Analysis failed. Check console.");
+        }
     }
 </script>
 </body>
