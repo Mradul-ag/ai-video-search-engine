@@ -42,9 +42,9 @@
                         </div>
                     </div>
 
-                    <button id="upload-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2 active:scale-[0.98]">
-                        Process & Analyze Video
-                    </button>
+                    <button id="upload-btn" onclick="startAnalysis()" class="w-full bg-blue-600...">
+    Process & Analyze Video
+</button>
 
                     <div id="upload-loader" class="hidden p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center gap-3">
                         <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
@@ -90,48 +90,40 @@
     </div>
 
    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
-        const videoInput = document.getElementById('video-input');
-        const uploadBtn = document.getElementById('upload-btn'); // Matches the ID in your HTML
-        const dropZone = document.getElementById('drop-zone');
+    const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
 
-        if (!uploadBtn) {
-            console.error("Critical Error: 'upload-btn' not found in HTML!");
+    async function startAnalysis() {
+        console.log("Button clicked!"); // If you don't see this, the HTML button doesn't match the ID
+        const fileInput = document.getElementById('video-input');
+        if (!fileInput.files.length) {
+            alert("Please select a file first!");
             return;
         }
 
-        dropZone.addEventListener('click', () => videoInput.click());
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
 
-        uploadBtn.addEventListener('click', async () => {
-            if (videoInput.files.length === 0) return alert("Select a video!");
-
-            const formData = new FormData();
-            formData.append("file", videoInput.files[0]);
-
-            try {
-                // 1. Upload
-                const upRes = await fetch(`${BACKEND_URL}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const upData = await upRes.json();
-                console.log("Upload Success:", upData);
-
-                // 2. Analyze
-                const analyzeRes = await fetch(`${BACKEND_URL}/analyze?filename=${encodeURIComponent(upData.filename)}`, {
-                    method: 'POST'
-                });
-                const anaData = await analyzeRes.json();
-                console.log("Analysis Success:", anaData);
-
-                alert("Done! Check console for results.");
-            } catch (err) {
-                console.error("Error:", err);
-                alert("Something went wrong. Check the console.");
-            }
-        });
-    });
+        try {
+            // Step 1: Upload
+            const response = await fetch(`${BACKEND_URL}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            console.log("Upload response:", data);
+            
+            // Step 2: Analyze
+            const analyzeRes = await fetch(`${BACKEND_URL}/analyze?filename=${encodeURIComponent(data.filename)}`, {
+                method: 'POST'
+            });
+            const analyzeData = await analyzeRes.json();
+            console.log("Analysis response:", analyzeData);
+            
+            alert("Success! Check console for data.");
+        } catch (e) {
+            console.error("Error:", e);
+        }
+    }
 </script>
 </body>
 </html>
