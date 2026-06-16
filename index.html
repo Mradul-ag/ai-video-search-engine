@@ -60,9 +60,9 @@
                     <p class="text-xs text-slate-400 leading-relaxed">Query the database for events using natural human speech sentences.</p>
                     <div class="space-y-3">
                         <input type="text" id="search-query" placeholder="e.g. When does the man look right?" class="w-full bg-slate-950 border border-slate-800 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none transition-colors">
-                        <button id="search-btn" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-xl transition-all text-sm active:scale-[0.98]">
-                            Query ChromaDB Memory
-                        </button>
+                        <button id="upload-btn" onclick="startAnalysis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2 active:scale-[0.98]">
+    Process & Analyze Video
+</button>
                     </div>
                 </div>
 
@@ -90,39 +90,18 @@
     </div>
 
    <script>
-    const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
-
-    async function startAnalysis() {
-        console.log("Button clicked!"); // If you don't see this, the HTML button doesn't match the ID
+    // THE SCRIPT: Must be at the very bottom
+    function startAnalysis() {
         const fileInput = document.getElementById('video-input');
-        if (!fileInput.files.length) {
-            alert("Please select a file first!");
+        
+        // 1. Manual check if file exists
+        if (!fileInput || fileInput.files.length === 0) {
+            alert("No file selected in input. Please select a video.");
             return;
         }
-
-        const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
-
-        try {
-            // Step 1: Upload
-            const response = await fetch(`${BACKEND_URL}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-            console.log("Upload response:", data);
-            
-            // Step 2: Analyze
-            const analyzeRes = await fetch(`${BACKEND_URL}/analyze?filename=${encodeURIComponent(data.filename)}`, {
-                method: 'POST'
-            });
-            const analyzeData = await analyzeRes.json();
-            console.log("Analysis response:", analyzeData);
-            
-            alert("Success! Check console for data.");
-        } catch (e) {
-            console.error("Error:", e);
-        }
+        
+        alert("File detected: " + fileInput.files[0].name);
+        // ... rest of your code ...
     }
 </script>
 </body>
