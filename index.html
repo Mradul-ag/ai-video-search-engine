@@ -32,7 +32,7 @@
                     </div>
 
                     <div id="drop-zone" class="border-2 border-dashed border-slate-800 hover:border-blue-500/50 bg-slate-950/40 hover:bg-blue-500/5 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group">
-                       <input type="file" id="video-input" class="hidden" accept="video/*">
+                       <input type="file" id="video-input" class="" accept="video/*">
                         <div class="space-y-3">
                             <div class="p-3 bg-slate-900 rounded-lg inline-block border border-slate-800 group-hover:scale-110 transition-transform duration-300">
                                 <svg class="w-6 h-6 text-slate-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h18M3 16h18"></path></svg>
@@ -46,7 +46,7 @@
     Process & Analyze Video
 </button>
 
-                    <div id="upload-loader" class="hidden p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center gap-3">
+                    <div id="upload-loader" class=" p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center gap-3">
                         <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
                         <p id="loader-status" class="text-xs text-blue-400 font-medium tracking-wide">Uploading media file to server storage...</p>
                     </div>
@@ -74,7 +74,7 @@
                     <span id="item-count" class="text-xs font-mono bg-slate-900 border border-slate-800 text-slate-400 px-2.5 py-1 rounded-md">0 entries parsed</span>
                 </div>
 
-                <div id="file-info-badge" class="hidden bg-slate-900/20 border border-slate-800 rounded-xl p-3 flex items-center gap-2.5">
+                <div id="file-info-badge" class=" bg-slate-900/20 border border-slate-800 rounded-xl p-3 flex items-center gap-2.5">
                     <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Target File Path</span>
                     <span id="active-file-path" class="text-xs font-mono text-slate-400 truncate flex-1"></span>
                 </div>
@@ -92,16 +92,15 @@
   <script>
     async function startAnalysis() {
         const fileInput = document.getElementById('video-input');
-        const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
-
-        if (!fileInput.files.length) {
-            alert("No file selected. Please click the area above to select a video first!");
-            return;
+        
+        // If no file is selected, force open the file picker
+        if (fileInput.files.length === 0) {
+            fileInput.click();
+            return; // Exit and wait for user to pick a file
         }
 
+        const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
         const file = fileInput.files[0];
-        console.log("Starting analysis for:", file.name);
-
         const formData = new FormData();
         formData.append("file", file);
 
@@ -112,19 +111,17 @@
                 body: formData
             });
             const upData = await upRes.json();
-            console.log("Upload Success:", upData);
-
+            
             // 2. Analyze
             const anaRes = await fetch(`${BACKEND_URL}/analyze?filename=${encodeURIComponent(upData.filename)}`, {
                 method: 'POST'
             });
             const anaData = await anaRes.json();
-            console.log("Analysis Result:", anaData);
-
-            alert("Analysis complete! Check the console for the result data.");
+            
+            alert("Analysis complete! Check console.");
+            console.log("Result:", anaData);
         } catch (err) {
-            console.error("Error:", err);
-            alert("Upload or Analysis failed. Check console.");
+            alert("Error: " + err.message);
         }
     }
 </script>
