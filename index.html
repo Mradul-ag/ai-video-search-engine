@@ -105,15 +105,15 @@
             body: formData
         });
         const upData = await upRes.json();
+// Change the analyze fetch block to this:
+const anaForm = new FormData();
+anaForm.append("file_path", upData.file_path); // This key 'file_path' must match the Form parameter in main.py
 
-        // 2. ANALYZE
-        const anaForm = new FormData();
-        anaForm.append("file_path", upData.file_path);
+const anaRes = await fetch(`${BACKEND_URL}/analyze-video`, {
+    method: 'POST',
+    body: anaForm // FastAPI handles the form-data automatically
+});
         
-        const anaRes = await fetch(`${BACKEND_URL}/analyze-video`, {
-            method: 'POST',
-            body: anaForm
-        });
         const anaData = await anaRes.json();
 
         // 3. RENDER RESULT
