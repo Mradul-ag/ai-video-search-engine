@@ -90,21 +90,31 @@
     </div>
 
    <script>
-    uploadBtn.addEventListener('click', async () => {
+    // Replace your old uploadBtn logic with this:
+uploadBtn.addEventListener('click', async () => {
     if (videoInput.files.length === 0) return alert("Select a video!");
 
     const formData = new FormData();
     formData.append("file", videoInput.files[0]);
 
-    // This sends the file to the /upload route
-    const response = await fetch(`${BACKEND_URL}/upload`, {
+    // 1. UPLOAD
+    const uploadRes = await fetch(`${BACKEND_URL}/upload`, {
         method: 'POST',
         body: formData
     });
-    
-    const result = await response.json();
-    console.log("Upload result:", result);
-    alert("Upload successful: " + result.filename);
+    const uploadData = await uploadRes.json();
+    console.log("Upload Success:", uploadData);
+
+    // 2. IMMEDIATELY TRIGGER ANALYZE
+    // This tells the backend to analyze the file it just received
+    const analyzeRes = await fetch(`${BACKEND_URL}/analyze?filename=${encodeURIComponent(uploadData.filename)}`, {
+        method: 'POST'
+    });
+    const analyzeData = await analyzeRes.json();
+    console.log("Analysis Result:", analyzeData);
+
+    // 3. SHOW RESULTS
+    alert("Analysis complete! Check the console for data.");
 });
 </script>
 </body>
