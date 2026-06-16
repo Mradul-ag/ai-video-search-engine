@@ -90,51 +90,22 @@
     </div>
 
    <script>
-    const BACKEND_URL = "https://ai-video-search-engine-j6yq.onrender.com";
-    const dropZone = document.getElementById('drop-zone');
-    const videoInput = document.getElementById('video-input');
-    const uploadBtn = document.getElementById('upload-btn');
-
-    // 1. Force the file input to open when the drop zone is clicked
-    dropZone.addEventListener('click', () => {
-        videoInput.click();
-    });
-
-    // 2. Listen for file selection
-    videoInput.addEventListener('change', () => {
-        if (videoInput.files.length > 0) {
-            console.log("File selected:", videoInput.files[0].name);
-            const p = dropZone.querySelector('p');
-            p.innerText = videoInput.files[0].name; // Update UI to show filename
-        }
-    });
-
-    // 3. Process Button Logic
     uploadBtn.addEventListener('click', async () => {
-        if (videoInput.files.length === 0) {
-            return alert("Please select a video file first!");
-        }
+    if (videoInput.files.length === 0) return alert("Select a video!");
 
-        const file = videoInput.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", videoInput.files[0]);
 
-        console.log("Uploading...");
-        
-        try {
-            const response = await fetch(`${BACKEND_URL}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            console.log("Upload Success:", result);
-            alert("Upload successful! File: " + result.filename);
-        } catch (error) {
-            console.error("Upload Error:", error);
-            alert("Upload failed. Check console.");
-        }
+    // This sends the file to the /upload route
+    const response = await fetch(`${BACKEND_URL}/upload`, {
+        method: 'POST',
+        body: formData
     });
+    
+    const result = await response.json();
+    console.log("Upload result:", result);
+    alert("Upload successful: " + result.filename);
+});
 </script>
 </body>
 </html>
